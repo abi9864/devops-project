@@ -28,9 +28,7 @@ jobs:
         env:
           ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
         run: |
-          aws ecr get-login-password --region ${AWS_REGION} | \
-          docker login --username AWS \
-          --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+          aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 
       # 4️⃣ Build Docker image
       - name: Build Docker image

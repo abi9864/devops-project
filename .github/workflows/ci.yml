@@ -36,7 +36,8 @@ jobs:
 
       # 4️⃣ Build Docker image ✅
       - name: Build Docker image
-        run: docker build -t $ECR_REPOSITORY:latest .
+        run: |
+          docker build -t $ECR_REPOSITORY:latest .
 
       # 5️⃣ Tag Docker image
       - name: Tag Docker image

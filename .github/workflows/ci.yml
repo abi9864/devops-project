@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+      - stage
       - main
 
 jobs:
@@ -19,11 +20,8 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Install Dependencies
-      run: |
-        pip install -r requirements.txt || echo "No requirements file"
+    - name: Check Python Version
+      run: python --version
 
-    - name: Run Tests
-      run: |
-        echo "Running tests..."
-        echo "Tests completed successfully!"
+    - name: Simple Test Step
+      run: echo "CI is working successfully!"

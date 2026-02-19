@@ -1,37 +1,47 @@
-name: CI-CD Pipeline
-
+name: CI-CD-ECR-Deploy
 on:
   push:
     branches:
       - stage
 
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
+env:
+  AWS_REGION: ap-south-1
 
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
     steps:
+      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2️⃣ Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
+      # 3️⃣ Login to Amazon ECR (using official action - most reliable)
       - name: Login to Amazon ECR
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      # 4️⃣ Build Docker image
       - name: Build Docker image
-        run: docker build -t ${{ secrets.ECR_REPOSITORY }}:latest .
-
-      - name: Tag Docker image
+        env:
+          ECR_REPO: ${{ secrets.ECR_REPOSITORY }}
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          docker tag ${{ secrets.ECR_REPOSITORY }}:latest \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
+          ECR_REPO_TRIMMED=$(echo "${ECR_REPO}" | tr -d '[:space:]')
+          docker build -t "${REGISTRY}/${ECR_REPO_TRIMMED}:latest" .
 
+      # 5️⃣ Push Docker image to ECR
       - name: Push Docker image
+        env:
+          ECR_REPO: ${{ secrets.ECR_REPOSITORY }}
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          docker push \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
+          ECR_REPO_TRIMMED=$(echo "${ECR_REPO}" | tr -d '[:space:]')
+          docker push "${REGISTRY}/${ECR_REPO_TRIMMED}:latest"
